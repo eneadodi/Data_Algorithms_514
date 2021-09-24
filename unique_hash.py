@@ -20,7 +20,7 @@ def q2():
     for j in t_vals:
         h_vals = []
         for i in range(10000):
-            h_vals.append(h(j,x=random.random()))
+            h_vals.append(h(j,r=random.random(),x=random.random()))
         
         counter_h1 = collections.Counter(h_vals)
 
@@ -39,8 +39,9 @@ def q3():
         collisions_counter = 0
         for i in range(10000):
             x = random.random()
-            h_vals_1.append(h(t_vals_1[j],x=x))
-            h_vals_2.append(h(t_vals_2[j],x=x))
+            r = random.random()
+            h_vals_1.append(h(t_vals_1[j],r=r,x=x))
+            h_vals_2.append(h(t_vals_2[j],r=r,x=x))
 
             if h_vals_1[i] == h_vals_2[i]:
                 collisions_counter+=1
@@ -62,24 +63,25 @@ def q4():
 
         for i in range(10000):
             x = random.random()
-            h_vals.append(h(t_vals_1[j],x=x)-h(t_vals_2[j],x=x))
+            r = random.random()
+            h_vals.append(h(t_vals_1[j],r=r,x=x)-h(t_vals_2[j],r=r,x=x))
 
         counter_h = collections.Counter(h_vals)
 
         graph(counter_h,"h("+str(t_vals_1[j])+")-h("+str(t_vals_2[j])+").png")
 
-def h(t,r=0.02,x=random.random()):
+def h(t,r=0.02,x=0.1):
     x_new = x
     #y_new = random.random()
-    for i in range(t):
+    for i in range(t+10):
         x_new = r*x_new*(1-x_new)# - s*(y_new*x_new)
         #y_new = r*y_new*(1-y_new) #-  s*(x_new*y_new)
-    return int(np.floor(t/(x_new) % 100))
+    return int(t/x_new) % 100
 
 
 def main():
-    #q2()
-    #q3()
+    q2()
+    q3()
     q4()
 if __name__ == "__main__":
     main()
