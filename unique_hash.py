@@ -6,9 +6,14 @@ import matplotlib
 import random
 import collections 
 
-def graph(c,name):
+def graph(counter,name):
 
-    plt.bar(*zip(*c.items()))
+    plt.bar(*zip(*counter.items()))
+    
+    sum_val = sum(counter.values())
+    mean = sum_val / len(counter)
+
+    plt.title('mean: ' + str(mean))
     plt.savefig(name)
     plt.clf()
 
@@ -20,11 +25,12 @@ def q2():
     for j in t_vals:
         h_vals = []
         for i in range(10000):
-            h_vals.append(h(j,r=random.random(),x=random.random()))
+            h_vals.append(h(j,r=random.random() + 0.02,x=random.random()))
         
         counter_h1 = collections.Counter(h_vals)
 
         graph(counter_h1,"h"+str(j)+".png")
+
 
 def q3():
     h_vals_1 = [] 
@@ -39,7 +45,7 @@ def q3():
         collisions_counter = 0
         for i in range(10000):
             x = random.random()
-            r = random.random()
+            r = random.random() + 0.02
             h_vals_1.append(h(t_vals_1[j],r=r,x=x))
             h_vals_2.append(h(t_vals_2[j],r=r,x=x))
 
@@ -63,7 +69,7 @@ def q4():
 
         for i in range(10000):
             x = random.random()
-            r = random.random()
+            r = random.random() + 0.02
             h_vals.append(h(t_vals_1[j],r=r,x=x)-h(t_vals_2[j],r=r,x=x))
 
         counter_h = collections.Counter(h_vals)
@@ -80,7 +86,7 @@ def h(t,r=0.02,x=0.1):
 
 
 def main():
-    q2()
+    #q2()
     q3()
     q4()
 if __name__ == "__main__":
