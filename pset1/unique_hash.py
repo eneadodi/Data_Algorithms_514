@@ -86,7 +86,7 @@ def h(t,r=0.02,x=0.1):
 
 
 def main():
-    #q2()
+    q2()
     q3()
     q4()
 if __name__ == "__main__":
