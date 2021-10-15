@@ -2,12 +2,15 @@
 import pickle 
 from os.path import dirname, join as pjoin
 import scipy.io as sio 
-from sklearn.preprocessing import Normalizer
+
 import numpy as np
 import collections 
 import time
 import random
 import math
+import matplotlib.pyplot as plt 
+import matplotlib.image as mpimg 
+
 def save_to_pickle(obj,filename):
     with open(filename,'wb') as outp:
         pickle.dump(obj,outp,pickle.HIGHEST_PROTOCOL)
@@ -99,8 +102,13 @@ class SimHashFull():
 def checking_most(simh):
     maxcount = max(len(v) for v in simh.hash_table.values())
     most = [k for k,v in simh.hash_table.items() if len(v) == maxcount]
-    print(most[0])
-    print(len(simh.hash_table[most[0]]))
+    return most[0]
+
+
+def finding_occurences_q4(simh,mnist,length=6):
+    for key,value in simh.hash_table.items():
+        if len(value) >= 6 and len(value) <= 7:
+            return key
 
 def cosine_similarity(x,y):
     inner = np.inner(x,y)
@@ -132,14 +140,45 @@ def q1():
                 t+=1
     return r_t_pairs
 
+
+
+def make_plot(images_index):
+    #load original mnist:
+    og_mnist = load_pickle('data/mnistpickle.pkl')
+    images = []
+    for i in images_index: 
+        images.append(np.reshape(og_mnist['trainX'][i],(28,28)))
+    
+    fig = plt.figure(figsize=(15,12))
+
+    rows = math.ceil(len(images)/2)
+    cols = math.floor(len(images)/2)
+
+    for i in range(len(images)):
+        fig.add_subplot(rows,cols,i+1)
+        plt.imshow(images[i])
+        plt.axis('off')
+        plt.title('index = ' + str(images_index[i]))
+
+    plt.savefig('q6.png')
+
+        
 def q4(mnist):
     X = mnist['testX']
     Y = mnist['testY']
     length = len(X[0])
+    
     simh = SimHashTable(0.95,35,length)
     simh.generate_bit_codes(X)
 
-    checking_most(simh)    
+    occurences_hash_value = finding_occurences_q4(simh,mnist)
+
+    bucket = simh.hash_table[occurences_hash_value]
+
+    images_index = []
+    for i,j in bucket:
+        images_index.append(i)
+    return images_index
 
 
 def q3(pairs,mnist):
@@ -195,7 +234,8 @@ def main():
     #expected_collisions = q3(r_t_pairs,mnist)
     #save_to_pickle(expected_collisions,'q3results.pkl')
    
-    q4(mnist)
+    #indeces = q4(mnist)
+    #make_plot(indeces)
     
 if __name__ == "__main__":
     main()
