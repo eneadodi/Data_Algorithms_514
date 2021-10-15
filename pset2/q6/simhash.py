@@ -38,22 +38,41 @@ class SimHashTable():
                 l.append(np.sign(np.dot(v,self.r_vectors[i])))
             return l
         else:
-            return np.sign(np.sign(np.dot(v,self.r_vectors[specific_vector])))
+            return np.sign(np.dot(v,self.r_vectors[specific_vector]))
         
 
-    def generate_bit_codes(self,values):
+    def generate_bit_codes(self,values,count_collisions=False, x=None):
         def convert_to_bytes(x):
             if x == -1:
                 return '0'
             else:
                 return '1'
+        
+        if count_collisions:
+            code_x = self.simhash(values[x],all=True)
+            code_x = ''.join(map(convert_to_bytes,code_x))
 
-        for v in values:
+            hash_x = hash(code_x)
+        
+        collisions = 0        
+
+        for i in range(len(values)):
+            if i == x:
+                continue
+
+            v = values[i]
             code = self.simhash(v,all=True)
 
             code = ''.join(map(convert_to_bytes,code))
-            print(code)
-            self.hash_table[hash(code)].append((code, v))
+            #print(code)
+            hash_code = hash(code)
+
+            if count_collisions:
+                if hash_code == hash_x:
+                    collisions += 1
+            self.hash_table[hash_code].append((i,code)) #i is the index in mnist, code is the code created
+        
+        return collisions
             
 class SimHashFull():
 
@@ -64,9 +83,11 @@ class SimHashFull():
         self.input_shape = input_shape
         self.tables = [SimHashTable(self.min_cos_sim,self.r,self.input_shape) for x in range(self.t)]
 
-    def fill_tables(self,values):
+    def fill_tables(self,values,count_collisions = False, collision_x):
+        count = 0
+        
         for i in range(self.t):
-            self.tables[i].generate_bit_codes(values)
+            count += self.tables[i].generate_bit_codes(values,count_collisions,collision_x)
 
     def add_table(self,values):
         self.t = self.t + 1
@@ -88,29 +109,12 @@ def cosine_similarity(x,y):
     similarity = inner / (np.dot(norm_x,norm_y))
     return similarity
 
-def prime_q1(mnist,random=False,index=77):
-    length = len(mnist['trainX'])
-    if random:
-        index_img1 = random.randint(0,length)
-    else:
-        index_img1 = index
-
-    img1 = (mnist['trainX'][index_img1],mnist['trainY'][index_img1])
-
-    similar_images= []
-    for i in range(length):
-        if cosine_similarity(img1[0],mnist['trainX'][i]) >= 0.95:
-            similar_images.append((i,mnist['trainX'][i],mnist['trainY'][i]))
-    
-    return img1, similar_images
-
-
-
 def q1():
     desired_result = 0.02
+    r_t_pairs = []
     for r in range(1,31):    
         tb = math.log(desired_result)/math.log(1-(0.95**r))
-        print(math.ceil(tb))
+        #print(math.ceil(tb))
 
         t = 1
         while True:
@@ -121,10 +125,27 @@ def q1():
                 print('t = ', t)
                 print('tb = ' , tb)
                 print('\n------\n')
+                r_t_pairs.append((r,t))
                 break
             else:
                 t+=1
+    return r_t_pairs
 
+
+def q3(pairs,mnist):
+
+    X = mnist['testX']
+    Y = mnist['testY']
+    length = len(X)
+
+    for r,t in pairs:
+        for i in range(len(X)):
+
+        simhash_full = SimHashFull(0.95,r,t,length)
+        simhash_full.fill_tables(X,True,)
+        
+        for i in range(t):
+            for key,value in simhash_full.tables[i]:
 
 def main():
     mnist = load_pickle('data/mnist_normalized.pkl')
@@ -142,8 +163,20 @@ def main():
    
     #print('total time: ' ,(end-start), ' seconds :)')
 
-    q1()
-    q1b()
-    print((1-(0.95**2))**3)
+    #q4 
+    
+    #simh = SimHashTable(0.95,35,mnist['trainX'][0].shape)
+    #simh.generate_bit_codes(mnist['trainX'])
+    '''
+    index_list = []
+    print(len(mnist['trainY']))
+    for i in range(len(mnist['trainX'])):
+        if mnist['trainY'][i] == 4:
+            index_list.append(i)
+    
+    '''
+    r_t_pairs = q1()
+
+    q3(r_t_pairs)
 if __name__ == "__main__":
     main()
