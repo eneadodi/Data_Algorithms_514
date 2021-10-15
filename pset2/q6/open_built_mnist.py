@@ -20,23 +20,28 @@ def save_mnist(filename):
     verify_compressed_data_integrity=True,matlab_compatible=True)
     save_to_pickle(mnist,'mnistpickle.pkl')
 
-def l2_norm(vals):
 
-    new_vals = np.zeros(len(vals))
-
-    for i in range(len(vals)):
-      
-        new_vals[i] = np.linalg.norm(vals[i])
-    
-    return new_vals
-
+#normalizes images to havec unit Euclidean norm.
+#returns mnist with normalized X
 def normalize_mnist(mnist):
+    X_train = np.array(mnist['trainX'],dtype = float)
+    X_test = np.array(mnist['testX'], dtype =float)
 
-    for i in range(len(mnist['testX'])):
-        print(np.linalg.norm(mnist['testX'][i]))
-        print(np.linalg.norm(mnist['testY'][i]))
+    X_train_l2 = np.linalg.norm(X_train,axis=1)
+    X_test_l2 = np.linalg.norm(X_test,axis=1)
 
-    pass 
+    
+    for i in range(len(X_train)):
+        X_train[i] = X_train[i]/X_train_l2[i]
+    #X_train /=  X_train_l2
+    for i in range(len(X_test)):
+        X_test[i] = X_test[i]/X_test_l2[i]
+
+    mnist['trainX'] = X_train
+    mnist['testX'] = X_test 
+
+
+    
 
 def combine_train_and_test(mnist):
     X = np.append(mnist['trainX'],mnist['testX'],axis=0)
@@ -45,19 +50,14 @@ def combine_train_and_test(mnist):
 
 def main():
     #save_mnist('./data/mnist.mat')
-    mnist = load_pickle('data/mnistpickle.pkl')
-    '''
-    print(obj.keys())
-    print('header: ' , obj['__header__'])
-    print('version: ' , obj['__version__'])
-    print('globals: ', obj['__globals__'])
-    print('example x and y: \n\n X: \n ', obj['testX'][0], ' \n\n Y:\n ', obj['testY'][0])
+    #mnist = load_pickle('data/mnist_normalized.pkl')
     
-    '''
+    #normalize_mnist(mnist)
     
-    X, Y = combine_train_and_test(mnist)
-    print(X[0].shape)
-    X = l2_norm(X)
+    #save_to_pickle(mnist, 'mnist_normalized.pkl')
+
+    #print(mnist['trainX'][0])
+
 
 
 if __name__ == "__main__":
