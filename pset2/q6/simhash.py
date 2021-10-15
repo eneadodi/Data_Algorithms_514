@@ -41,24 +41,14 @@ class SimHashTable():
             return np.sign(np.dot(v,self.r_vectors[specific_vector]))
         
 
-    def generate_bit_codes(self,values,count_collisions=False, x=None):
+    def generate_bit_codes(self,values,count_collisions=False, x_col=None):
         def convert_to_bytes(x):
             if x == -1:
                 return '0'
             else:
-                return '1'
-        
-        if count_collisions:
-            code_x = self.simhash(values[x],all=True)
-            code_x = ''.join(map(convert_to_bytes,code_x))
-
-            hash_x = hash(code_x)
-        
-        collisions = 0        
+                return '1'    
 
         for i in range(len(values)):
-            if i == x:
-                continue
 
             v = values[i]
             code = self.simhash(v,all=True)
@@ -67,12 +57,14 @@ class SimHashTable():
             #print(code)
             hash_code = hash(code)
 
-            if count_collisions:
-                if hash_code == hash_x:
-                    collisions += 1
             self.hash_table[hash_code].append((i,code)) #i is the index in mnist, code is the code created
         
-        return collisions
+        if count_collisions:
+            code = self.simhash(values[x_col],all=True)
+            code = ''.join(map(convert_to_bytes,code))
+            #print(code)
+            hash_code = hash(code)
+            return hash_code 
             
 class SimHashFull():
 
@@ -83,11 +75,18 @@ class SimHashFull():
         self.input_shape = input_shape
         self.tables = [SimHashTable(self.min_cos_sim,self.r,self.input_shape) for x in range(self.t)]
 
-    def fill_tables(self,values,count_collisions = False, collision_x):
-        count = 0
+    def fill_tables(self,values,count_collisions = False, collision_x=None):
         
+        reference_hashes = []
+
         for i in range(self.t):
-            count += self.tables[i].generate_bit_codes(values,count_collisions,collision_x)
+            if count_collisions:
+                reference_hashes.append(self.tables[i].generate_bit_codes(values),count_collisions,collision_x)
+            else:
+                self.tables[i].generate_bit_codes(values)
+        
+        if count_collisions:
+            return reference_hashes
 
     def add_table(self,values):
         self.t = self.t + 1
@@ -138,14 +137,29 @@ def q3(pairs,mnist):
     Y = mnist['testY']
     length = len(X)
 
+    total_counter = []
+
     for r,t in pairs:
+        pair_counters = []
+        
         for i in range(len(X)):
 
-        simhash_full = SimHashFull(0.95,r,t,length)
-        simhash_full.fill_tables(X,True,)
+            simhash_full = SimHashFull(0.95,r,t,length)
+            reference_hashes = simhash_full.fill_tables(X,True,i)
+            collision_counter = 0
+            
+            for i in range(t):
+                collision_counter = collision_counter + (len(simhash_full.tables[i][reference_hashes[i]]) - 1)
+            
+            pair_counters.append(collision_counter)
         
-        for i in range(t):
-            for key,value in simhash_full.tables[i]:
+        average_for_pair = sum(pair_counters)/len(pair_counters)
+
+        total_counter.append(average_for_pair)
+
+        print('done with current pair')
+    
+    return (total_counter, sum(total_counter)/len(total_counter))
 
 def main():
     mnist = load_pickle('data/mnist_normalized.pkl')
@@ -177,6 +191,7 @@ def main():
     '''
     r_t_pairs = q1()
 
-    q3(r_t_pairs)
+    q3(r_t_pairs,mnist)
+
 if __name__ == "__main__":
     main()
