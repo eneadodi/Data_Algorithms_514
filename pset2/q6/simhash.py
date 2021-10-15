@@ -227,7 +227,7 @@ def q3(pairs,mnist):
 
 
 def main():
-    mnist = load_pickle('data/mnist_normalized.pkl')
+    #mnist = load_pickle('data/mnist_normalized.pkl')
 
     #r_t_pairs = q1()
 
@@ -236,6 +236,20 @@ def main():
    
     #indeces = q4(mnist)
     #make_plot(indeces)
+
+    q3_vals = load_pickle('q3results.pkl')
+    print(q3_vals)
+    x = []
+    y = []
+    for key,value in q3_vals.items():
+        x.append(key)
+        y.append(value)
     
+    fig = plt.figure()
+    ax = plt.axes()
+
+    ax.plot(x,y)
+    plt.savefig('q3.png')
+    plt.title('r vs expected collisions')
 if __name__ == "__main__":
     main()
