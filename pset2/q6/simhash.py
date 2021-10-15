@@ -7,6 +7,7 @@ import numpy as np
 import collections 
 import time
 import random
+import math
 def load_pickle(picklename):
     with open(picklename,'rb') as inp:
         obj = pickle.load(inp)
@@ -105,13 +106,24 @@ def prime_q1(mnist,random=False,index=77):
 
 
 
-def q1(img1,similar_images):
-    
-    for r in range(30):
-        t  = 1
-        simHashFull(0.95,r,t,img1.shape)
-        while 
-        
+def q1():
+    desired_result = 0.02
+    for r in range(1,31):    
+        tb = math.log(desired_result)/math.log(1-(0.95**r))
+        print(math.ceil(tb))
+
+        t = 1
+        while True:
+                
+            result = (1-(0.95**r))**t 
+            if result <= desired_result:
+                print('r = ', r)
+                print('t = ', t)
+                print('tb = ' , tb)
+                print('\n------\n')
+                break
+            else:
+                t+=1
 
 
 def main():
@@ -130,9 +142,8 @@ def main():
    
     #print('total time: ' ,(end-start), ' seconds :)')
 
-    similar = prime_q1(mnist)
-    print(len(similar))
-    for i in similar:
-        print(i[0],i[2])
+    q1()
+    q1b()
+    print((1-(0.95**2))**3)
 if __name__ == "__main__":
     main()
