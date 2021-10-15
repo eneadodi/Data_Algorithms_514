@@ -6,6 +6,7 @@ from sklearn.preprocessing import Normalizer
 import numpy as np
 import collections 
 import time
+import random
 def load_pickle(picklename):
     with open(picklename,'rb') as inp:
         obj = pickle.load(inp)
@@ -23,7 +24,7 @@ class SimHashTable():
         self.input_shape = input_shape
     
         self.r_vectors = np.array([self.make_random_vector() for x in range(self.r)])
-        self.hash_table = collections.defaultdict(list) #np.array([collections.defaultdict(list) for x in range(self.t)])
+        self.hash_table = collections.defaultdict(list) 
 
 
     def make_random_vector(self):
@@ -50,7 +51,8 @@ class SimHashTable():
             code = self.simhash(v,all=True)
 
             code = ''.join(map(convert_to_bytes,code))
-            self.hash_table[hash(code)].append(v)
+            print(code)
+            self.hash_table[hash(code)].append((code, v))
             
 class SimHashFull():
 
@@ -65,26 +67,72 @@ class SimHashFull():
         for i in range(self.t):
             self.tables[i].generate_bit_codes(values)
 
+    def add_table(self,values):
+        self.t = self.t + 1
+        self.tables.append(SimHashTable(self.min_cos_sim,self.r,self.input_shape))
+        self.tables[t-1].generate_bit_codes(values)
+    
+
 def checking_most(simh):
     maxcount = max(len(v) for v in simh.hash_table.values())
     most = [k for k,v in simh.hash_table.items() if len(v) == maxcount]
     print(most[0])
     print(len(simh.hash_table[most[0]]))
 
+def cosine_similarity(x,y):
+    inner = np.inner(x,y)
+    norm_x = np.linalg.norm(x)
+    norm_y = np.linalg.norm(y)
+
+    similarity = inner / (np.dot(norm_x,norm_y))
+    return similarity
+
+def prime_q1(mnist,random=False,index=77):
+    length = len(mnist['trainX'])
+    if random:
+        index_img1 = random.randint(0,length)
+    else:
+        index_img1 = index
+
+    img1 = (mnist['trainX'][index_img1],mnist['trainY'][index_img1])
+
+    similar_images= []
+    for i in range(length):
+        if cosine_similarity(img1[0],mnist['trainX'][i]) >= 0.95:
+            similar_images.append((i,mnist['trainX'][i],mnist['trainY'][i]))
+    
+    return img1, similar_images
+
+
+
+def q1(img1,similar_images):
+    
+    for r in range(30):
+        t  = 1
+        simHashFull(0.95,r,t,img1.shape)
+        while 
+        
+
+
 def main():
     mnist = load_pickle('data/mnist_normalized.pkl')
 
     #simh = SimHashTable(0.95,10,mnist['trainX'][0].shape)
-    #simh.generate_bit_codes(mnist['trainX'])
+    #simh.generate_bit_codes(mnist['trainX'][0:10])
     
-    # checking_most(simh) THIS WORKS!
+    #checking_most(simh)# THIS WORKS!
 
-    start = time.time()
-    simhash_full = SimHashFull(0.95,10, 5, mnist['trainX'][0].shape)
-    simhash_full.fill_tables(mnist['trainX'])
-    end = time.time()
+    
+    #start = time.time()
+    #simhash_full = SimHashFull(0.95,10, 5, mnist['trainX'][0].shape)
+    #simhash_full.fill_tables(mnist['trainX'])
+    #end = time.time()
+   
+    #print('total time: ' ,(end-start), ' seconds :)')
 
-    print('total time: ' ,(end-start), ' seconds :)')
-
+    similar = prime_q1(mnist)
+    print(len(similar))
+    for i in similar:
+        print(i[0],i[2])
 if __name__ == "__main__":
     main()
