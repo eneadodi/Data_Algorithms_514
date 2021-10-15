@@ -8,6 +8,10 @@ import collections
 import time
 import random
 import math
+def save_to_pickle(obj,filename):
+    with open(filename,'wb') as outp:
+        pickle.dump(obj,outp,pickle.HIGHEST_PROTOCOL)
+
 def load_pickle(picklename):
     with open(picklename,'rb') as inp:
         obj = pickle.load(inp)
@@ -48,23 +52,21 @@ class SimHashTable():
             else:
                 return '1'    
 
+        reference_codes = set()
         for i in range(len(values)):
 
             v = values[i]
+            
             code = self.simhash(v,all=True)
 
             code = ''.join(map(convert_to_bytes,code))
             #print(code)
             hash_code = hash(code)
-
+            reference_codes.add(hash_code)
             self.hash_table[hash_code].append((i,code)) #i is the index in mnist, code is the code created
         
         if count_collisions:
-            code = self.simhash(values[x_col],all=True)
-            code = ''.join(map(convert_to_bytes,code))
-            #print(code)
-            hash_code = hash(code)
-            return hash_code 
+            return reference_codes 
             
 class SimHashFull():
 
@@ -81,7 +83,7 @@ class SimHashFull():
 
         for i in range(self.t):
             if count_collisions:
-                reference_hashes.append(self.tables[i].generate_bit_codes(values),count_collisions,collision_x)
+                reference_hashes.append(list(self.tables[i].generate_bit_codes(values,count_collisions,collision_x)))
             else:
                 self.tables[i].generate_bit_codes(values)
         
@@ -130,68 +132,70 @@ def q1():
                 t+=1
     return r_t_pairs
 
+def q4(mnist):
+    X = mnist['testX']
+    Y = mnist['testY']
+    length = len(X[0])
+    simh = SimHashTable(0.95,35,length)
+    simh.generate_bit_codes(X)
+
+    checking_most(simh)    
+
 
 def q3(pairs,mnist):
 
     X = mnist['testX']
     Y = mnist['testY']
-    length = len(X)
+    length = len(X[0])
 
     total_counter = []
-
+    z = 0
     for r,t in pairs:
-        pair_counters = []
         
-        for i in range(len(X)):
+        simhash_full = SimHashFull(0.95,r,t,length)
 
-            simhash_full = SimHashFull(0.95,r,t,length)
-            reference_hashes = simhash_full.fill_tables(X,True,i)
-            collision_counter = 0
-            
-            for i in range(t):
-                collision_counter = collision_counter + (len(simhash_full.tables[i][reference_hashes[i]]) - 1)
-            
-            pair_counters.append(collision_counter)
+        #this is a 2D list where the j are the values in table i
+        reference_hashes = simhash_full.fill_tables(X,True)
+
+        collision_counter = 0
+        collisions_in_bucket = collections.defaultdict(int)
+
+        for i in range(len(reference_hashes)):
+            for j in range(len(reference_hashes[i])):
+                total_collisions_for_current_hash_and_table = (len(simhash_full.tables[i].hash_table[reference_hashes[i][j]]) - 1)
+                collisions_in_bucket[str(reference_hashes[i][j])] += total_collisions_for_current_hash_and_table
         
-        average_for_pair = sum(pair_counters)/len(pair_counters)
+        length_collisions = 0
+        sum_collisions = 0
+        for key,value in collisions_in_bucket.items():
+            length_collisions += 1
+            sum_collisions += value 
+            
+        
+        total_counter.append(sum_collisions/length_collisions)
 
-        total_counter.append(average_for_pair)
-
-        print('done with current pair')
+        #
     
-    return (total_counter, sum(total_counter)/len(total_counter))
+    #finally make a dictionary for r values and total_countfer
+    return_dict = {}
+    i = 0
+    for r,t in pairs :
+        return_dict[r] = total_counter[i]
+        i+=1
+
+    
+    return return_dict 
+
 
 def main():
     mnist = load_pickle('data/mnist_normalized.pkl')
 
-    #simh = SimHashTable(0.95,10,mnist['trainX'][0].shape)
-    #simh.generate_bit_codes(mnist['trainX'][0:10])
-    
-    #checking_most(simh)# THIS WORKS!
+    #r_t_pairs = q1()
 
-    
-    #start = time.time()
-    #simhash_full = SimHashFull(0.95,10, 5, mnist['trainX'][0].shape)
-    #simhash_full.fill_tables(mnist['trainX'])
-    #end = time.time()
+    #expected_collisions = q3(r_t_pairs,mnist)
+    #save_to_pickle(expected_collisions,'q3results.pkl')
    
-    #print('total time: ' ,(end-start), ' seconds :)')
-
-    #q4 
+    q4(mnist)
     
-    #simh = SimHashTable(0.95,35,mnist['trainX'][0].shape)
-    #simh.generate_bit_codes(mnist['trainX'])
-    '''
-    index_list = []
-    print(len(mnist['trainY']))
-    for i in range(len(mnist['trainX'])):
-        if mnist['trainY'][i] == 4:
-            index_list.append(i)
-    
-    '''
-    r_t_pairs = q1()
-
-    q3(r_t_pairs,mnist)
-
 if __name__ == "__main__":
     main()
