@@ -54,8 +54,9 @@ def main():
     print('example x and y: \n\n X: \n ', obj['testX'][0], ' \n\n Y:\n ', obj['testY'][0])
     
     '''
+    
     X, Y = combine_train_and_test(mnist)
-
+    print(X[0].shape)
     X = l2_norm(X)
 
 
